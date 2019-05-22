@@ -20,6 +20,7 @@ class EditBook extends React.Component {
     this.setStatesNow = this.setStatesNow.bind(this);
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
+    this.handleDelete = this.handleDelete.bind(this);
   }
 
   setStatesNow() {
@@ -49,13 +50,21 @@ class EditBook extends React.Component {
     let self = this.props.fetchBooks;
     this.props.handleClose();
 
-    fetch('http://localhost:3000/books/' + this.props.book.id + '.json' + '?author=' + this.props.book.author + '&title=' + this.props.book.title + '&year=' + this.props.book.year, {
+    fetch('https://egui-back.herokuapp.com/books/' + this.props.book.id + '.json' + '?author=' + this.props.book.author + '&title=' + this.props.book.title + '&year=' + this.props.book.year, {
       method: 'put'
     }).then(function(response) {
       return response.json();
     }).then(function(data) {
       self();
     });
+  }
+
+  handleDelete() {
+    let self = this.props.fetchBooks;
+    this.props.handleClose();
+    fetch('https://egui-back.herokuapp.com/books/' + this.props.book.id + '.json', {
+      method: 'delete'
+    }).then(() => self());
   }
 
   render() {
@@ -87,6 +96,9 @@ class EditBook extends React.Component {
             </Button>
             <Button variant="primary" onClick={() => this.handleSubmit()}>
               Save Changes
+            </Button>
+            <Button variant="danger" onClick={() => this.handleDelete()}>
+              Delete
             </Button>
           </Modal.Footer>
         </Form>
