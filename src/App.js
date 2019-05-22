@@ -95,7 +95,7 @@ class EditBook extends React.Component {
               Close
             </Button>
             <Button variant="primary" onClick={() => this.handleSubmit()}>
-              Save Changes
+              Save 
             </Button>
             <Button variant="danger" onClick={() => this.handleDelete()}>
               Delete
