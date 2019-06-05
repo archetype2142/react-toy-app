@@ -8,6 +8,70 @@ import Form from 'react-bootstrap/Form';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 
+class FilterSection extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      search_params: {
+        author: "",
+        title: "",
+        year: ""
+      }
+    }
+    this.handleSubmit = this.handleSubmit.bind(this);
+  }
+
+  handleSubmit(form) {
+    form.preventDefault();
+    var body = new FormData(form.currentTarget);
+    console.log(body);
+  }
+  
+  render() {
+    return (
+      <div className="border no-margin">
+        <Form onSubmit={e => this.handleSubmit(e)}>
+          <Form.Row>
+          <Form.Group as={Col} md="4">
+            <Form.Label>Author</Form.Label>
+              <Form.Control
+                required
+                name="author"
+                type="text"
+                placeholder="Author"
+              />
+          </Form.Group>
+          <Form.Group as={Col} md="4">
+            <Form.Label>Title</Form.Label>
+              <Form.Control
+                name="title"
+                required
+                type="text"
+                placeholder="Title"
+              />
+          </Form.Group>
+
+          <Form.Group as={Col} controlId="formGridState">
+            <Form.Label>Year</Form.Label>
+              <Form.Control as="select">
+              <option> </option>
+              {
+              this.props.years.map((year, index) => (
+                <option key={index} > { year } </option>
+              ))
+              }
+              </Form.Control>
+          </Form.Group>
+          <Button variant="primary" type="submit">
+          Submit
+          </Button>
+          </Form.Row>
+        </Form>
+      </div>
+    );
+  }
+}
+
 class EditBook extends React.Component {
   constructor(props) {
     super(props);
@@ -50,7 +114,7 @@ class EditBook extends React.Component {
     let self = this.props.fetchBooks;
     this.props.handleClose();
 
-    fetch('https://egui-back.herokuapp.com/books/' + this.props.book.id + '.json' + '?author=' + this.props.book.author + '&title=' + this.props.book.title + '&year=' + this.props.book.year, {
+    fetch('https://localhost:5001/api/books/' + this.props.book.id + '?author=' + this.props.book.author + '&title=' + this.props.book.title + '&year=' + this.props.book.year, {
       method: 'put'
     }).then(function(response) {
       return response.json();
@@ -62,7 +126,7 @@ class EditBook extends React.Component {
   handleDelete() {
     let self = this.props.fetchBooks;
     this.props.handleClose();
-    fetch('https://egui-back.herokuapp.com/books/' + this.props.book.id + '.json', {
+    fetch('https://localhost:5001/api/books/' + this.props.book.id, {
       method: 'delete'
     }).then(() => self());
   }
@@ -75,17 +139,17 @@ class EditBook extends React.Component {
           </Modal.Header>
           <Form>
           <Modal.Body>
-              <Form.Group controlId="formBasicEmail">
+              <Form.Group>
                 <Form.Label>Author</Form.Label>
                 <Form.Control value={this.state.author} onChange={e => this.handleChange(e, "author")} type="text" placeholder={this.props.book.author} />
               </Form.Group>
 
-              <Form.Group controlId="formBasicPassword">
+              <Form.Group>
                 <Form.Label>Title</Form.Label>
                 <Form.Control value={this.state.title} onChange={e => this.handleChange(e, "title")} type="text" placeholder={this.props.book.title} />
               </Form.Group>
 
-              <Form.Group controlId="formBasicPassword">
+              <Form.Group>
                 <Form.Label>Year</Form.Label>
                 <Form.Control value={this.state.year} onChange={e => this.handleChange(e, "year")} type="text" placeholder={this.props.book.year} />
               </Form.Group>
@@ -130,7 +194,7 @@ class AddBook extends React.Component {
     let self = this.props.fetchBooks;
     this.props.handleClose();
 
-    fetch('https://egui-back.herokuapp.com/books.json/' + '?author=' + this.state.author + '&title=' + this.state.title + '&year=' + this.state.year, {
+    fetch('https://localhost:5001/api/books' + '?author=' + this.state.author + '&title=' + this.state.title + '&year=' + this.state.year, {
       method: 'post'
     }).then(function(response) {
       return response.json();
@@ -196,7 +260,8 @@ class App extends React.Component {
   }
   
   fetchBooks() {
-    fetch('https://egui-back.herokuapp.com/books.json')
+    console.log("fetched");
+    fetch('https://localhost:5001/api/books')
     .then(results => {
       return results.json();
     }).then(data => {
@@ -232,33 +297,10 @@ class App extends React.Component {
     return (
       <Container className="border">
       <h1 className="text-center">Library</h1>
-      <div className="border no-margin">
-        <Row>
-          <Col>
-          Title
-          </Col>
-
-          <Col>
-          Author
-          </Col>
-
-          <Col>
-          Year
-          </Col>
-
-          <Col>
-            <div className="btn-group">
-              <Button className="btn" variant="primary">
-                Filter
-              </Button>
-            
-              <Button className="btn" variant="secondary">
-                Clear
-              </Button>
-            </div>
-          </Col>
-        </Row>
-      </div>
+      
+      {/*filter section*/}
+      <FilterSection years={this.state.books.map((o) => (o.year)) } />
+      
       <div className="table-wrapper-scroll-y scrollbar">
         <Table striped bordered hover>
           <thead>
