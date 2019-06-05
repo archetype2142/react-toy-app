@@ -7,53 +7,86 @@ import Modal from 'react-bootstrap/Modal';
 import Form from 'react-bootstrap/Form';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
+import ButtonGroup from 'react-bootstrap/ButtonGroup';
 
 class FilterSection extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      search_params: {
+      searchParams: {
         author: "",
         title: "",
         year: ""
       }
     }
+
+    this.clearForm = this.clearForm.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
+    this.handleInputChange = this.handleInputChange.bind(this);
   }
 
-  handleSubmit(form) {
-    form.preventDefault();
-    var body = new FormData(form.currentTarget);
-    console.log(body);
+  clearForm() {
+    this.refs.author.value= '';
+    this.refs.title.value= '';
+    this.refs.year.value= '';
+    this.props.fetchBooks();
   }
-  
+ 
+  handleSubmit(e) {
+    e.preventDefault();
+    if (e.currentTarget.checkValidity()) {
+      console.log(this.state.searchParams)
+      let x = this;
+
+      fetch('https://localhost:5001/api/books/filter' + '?author=' + this.state.searchParams.author + '&title=' + this.state.searchParams.title + '&year=' + this.state.searchParams.year, {
+        method: 'post'
+      }).then(function(response) {
+        return response.json();
+      }).then(function(data) {
+        x.props.passResults(data);
+      });
+    }
+  }
+ 
+  handleInputChange(event) {
+    const { value, name } = event.currentTarget;
+    this.setState({
+      searchParams: {
+        ...this.state.searchParams,
+        [name]: value
+      }
+    })
+  }
+ 
   render() {
     return (
       <div className="border no-margin">
-        <Form onSubmit={e => this.handleSubmit(e)}>
+        <Form onSubmit={this.handleSubmit}>
           <Form.Row>
           <Form.Group as={Col} md="4">
             <Form.Label>Author</Form.Label>
               <Form.Control
-                required
                 name="author"
                 type="text"
                 placeholder="Author"
+                onChange={this.handleInputChange}
+                ref="author"
               />
           </Form.Group>
           <Form.Group as={Col} md="4">
             <Form.Label>Title</Form.Label>
               <Form.Control
                 name="title"
-                required
                 type="text"
                 placeholder="Title"
+                onChange={this.handleInputChange}
+                ref="title"
               />
           </Form.Group>
-
+ 
           <Form.Group as={Col} controlId="formGridState">
             <Form.Label>Year</Form.Label>
-              <Form.Control as="select">
+              <Form.Control ref="year" as="select" name="year" onChange={this.handleInputChange}>
               <option> </option>
               {
               this.props.years.map((year, index) => (
@@ -62,9 +95,14 @@ class FilterSection extends React.Component {
               }
               </Form.Control>
           </Form.Group>
+          <ButtonGroup>
           <Button variant="primary" type="submit">
           Submit
           </Button>
+          <Button variant="secondary" onClick={() => this.clearForm()}>
+          Clear
+          </Button>
+          </ButtonGroup>
           </Form.Row>
         </Form>
       </div>
@@ -259,14 +297,18 @@ class App extends React.Component {
     this.fetchBooks = this.fetchBooks.bind(this);
   }
   
-  fetchBooks() {
-    console.log("fetched");
-    fetch('https://localhost:5001/api/books')
-    .then(results => {
-      return results.json();
-    }).then(data => {
-      this.setState({books: data});
-    });
+  fetchBooks(filtered = false, books = []) {
+    if(filtered) {
+      this.setState({ books: books });
+    } else {
+      fetch('https://localhost:5001/api/books')
+      .then(results => {
+        return results.json();
+      }).then(data => {
+        this.setState({ books: data });
+      });
+    }
+    
   }
 
   handleCloseAdd() {
@@ -293,13 +335,17 @@ class App extends React.Component {
     this.setState({ bookToEdit: book });
   }
 
+  handleResults = (results) => {
+    this.fetchBooks(true, results);
+  }
+
   render() {
     return (
       <Container className="border">
       <h1 className="text-center">Library</h1>
       
       {/*filter section*/}
-      <FilterSection years={this.state.books.map((o) => (o.year)) } />
+      <FilterSection years={this.state.books.map((o) => (o.year)) } passResults={this.handleResults} fetchBooks={this.fetchBooks}/>
       
       <div className="table-wrapper-scroll-y scrollbar">
         <Table striped bordered hover>
@@ -349,7 +395,6 @@ class App extends React.Component {
         {/*pop up to edit*/}
         <EditBook show={this.state.showEdit} handleClose={this.handleCloseEdit} handleShow={this.handleShowEdit} book={this.state.bookToEdit} fetchBooks={this.fetchBooks}/>
         
-
       </Container>
     );
   }
