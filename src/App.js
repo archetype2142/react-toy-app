@@ -26,6 +26,7 @@ class FilterSection extends React.Component {
   }
 
   clearForm() {
+    this.props.filter(true);
     this.refs.author.value= '';
     this.refs.title.value= '';
     this.refs.year.value= '';
@@ -34,6 +35,9 @@ class FilterSection extends React.Component {
  
   handleSubmit(e) {
     e.preventDefault();
+    
+    this.props.filter(false);
+
     if (e.currentTarget.checkValidity()) {
       console.log(this.state.searchParams)
       let x = this;
@@ -46,6 +50,14 @@ class FilterSection extends React.Component {
         x.props.passResults(data);
       });
     }
+
+    this.setState({
+      searchParams: {
+        author: "",
+        title: "",
+        year: ""
+      }
+    })
   }
  
   handleInputChange(event) {
@@ -62,8 +74,8 @@ class FilterSection extends React.Component {
     return (
       <div className="border no-margin">
         <Form onSubmit={this.handleSubmit}>
-          <Form.Row>
-          <Form.Group as={Col} md="4">
+          <Form.Row className="align-items-center">
+          <Form.Group as={Col}>
             <Form.Label>Author</Form.Label>
               <Form.Control
                 name="author"
@@ -73,7 +85,7 @@ class FilterSection extends React.Component {
                 ref="author"
               />
           </Form.Group>
-          <Form.Group as={Col} md="4">
+          <Form.Group as={Col} className="align-items-center">
             <Form.Label>Title</Form.Label>
               <Form.Control
                 name="title"
@@ -89,20 +101,22 @@ class FilterSection extends React.Component {
               <Form.Control ref="year" as="select" name="year" onChange={this.handleInputChange}>
               <option> </option>
               {
-              this.props.years.map((year, index) => (
+              [...new Set(this.props.years)].map((year, index) => (
                 <option key={index} > { year } </option>
               ))
               }
               </Form.Control>
           </Form.Group>
-          <ButtonGroup>
-          <Button variant="primary" type="submit">
-          Submit
-          </Button>
-          <Button variant="secondary" onClick={() => this.clearForm()}>
-          Clear
-          </Button>
-          </ButtonGroup>
+          <Form.Group as={Col} controlId="formGridState" style={{ display: "flex", marginTop: "30px", justifyContent: "center", alignItems: "center" }}>
+            <ButtonGroup>
+            <Button variant="primary" type="submit">
+            Submit
+            </Button>
+            <Button variant="secondary" onClick={() => this.clearForm()}>
+            Clear
+            </Button>
+            </ButtonGroup>
+           </Form.Group>
           </Form.Row>
         </Form>
       </div>
@@ -159,6 +173,12 @@ class EditBook extends React.Component {
     }).then(function(data) {
       self();
     });
+
+    this.setState({
+      author: "",
+      title: "",
+      year: "",
+    })
   }
 
   handleDelete() {
@@ -251,17 +271,17 @@ class AddBook extends React.Component {
           <Modal.Body>
               <Form.Group controlId="formBasicEmail">
                 <Form.Label>Author</Form.Label>
-                <Form.Control value={this.state.author} onChange={e => this.handleChange(e, "author")} type="text" placeholder="Author" />
+                <Form.Control value={this.state.author} onChange={e => this.handleChange(e, "author")} type="text" placeholder="Author" required />
               </Form.Group>
 
               <Form.Group controlId="formBasicPassword">
                 <Form.Label>Title</Form.Label>
-                <Form.Control value={this.state.title} onChange={e => this.handleChange(e, "title")} type="text" placeholder="Title" />
+                <Form.Control value={this.state.title} onChange={e => this.handleChange(e, "title")} type="text" placeholder="Title" required />
               </Form.Group>
 
               <Form.Group controlId="formBasicPassword">
                 <Form.Label>Year</Form.Label>
-                <Form.Control value={this.state.year} onChange={e => this.handleChange(e, "year")} type="text" placeholder="Year" />
+                <Form.Control value={this.state.year} onChange={e => this.handleChange(e, "year")} type="number" placeholder="Year" required />
               </Form.Group>
           </Modal.Body>
           <Modal.Footer>
@@ -287,6 +307,7 @@ class App extends React.Component {
       showAdd: false, 
       showEdit: false,  
       bookToEdit: "", 
+      filter: true,
     }
 
     this.handleShowAdd = this.handleShowAdd.bind(this);
@@ -295,6 +316,7 @@ class App extends React.Component {
     this.handleCloseEdit = this.handleCloseEdit.bind(this);
 
     this.fetchBooks = this.fetchBooks.bind(this);
+    this.handleFilter = this.handleFilter.bind(this);
   }
   
   fetchBooks(filtered = false, books = []) {
@@ -309,6 +331,9 @@ class App extends React.Component {
       });
     }
     
+  }
+  handleFilter(state) {
+    this.setState({ filter: state });
   }
 
   handleCloseAdd() {
@@ -345,7 +370,7 @@ class App extends React.Component {
       <h1 className="text-center">Library</h1>
       
       {/*filter section*/}
-      <FilterSection years={this.state.books.map((o) => (o.year)) } passResults={this.handleResults} fetchBooks={this.fetchBooks}/>
+      <FilterSection years={this.state.books.map((o) => (o.year)) } passResults={this.handleResults} fetchBooks={this.fetchBooks} filter={this.handleFilter}/>
       
       <div className="table-wrapper-scroll-y scrollbar">
         <Table striped bordered hover>
